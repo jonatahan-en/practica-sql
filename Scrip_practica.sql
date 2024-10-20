@@ -634,11 +634,14 @@ select distinct genero
 from tmp_videoclub tv
 where genero is not null
 om conflict (nombre_genero) do nothing ;
+
 --Añadir UNIQUE a peliculas
 alter table peliculas
 add constraint unique_titulo_pelicula unique (titulo_pelicula);
+
 --Aumentar los varchar
 alter table peliculas sinopsis type varchar(1000);
+
 --Aumentar los varchar
 alter table peliculas titulo_pelicula type varchar(100);
 
@@ -671,9 +674,7 @@ select id_copia from tmp_videoclub tv ;
  
 
 
-select 
-    id_pelicula, 
-    COUNT(*) AS cantidad_copias
+select id_pelicula, count() (*) as cantidad_copias
 from copia group by id_pelicula order by id_pelicula;
 
 select distinct tv.titulo
@@ -681,6 +682,7 @@ from tmp_videoclub tv
 left join peliculas p on tv.titulo = p.titulo_pelicula
 where p.titulo_pelicula is null;
 
+SELECT * FROM tmp_videoclub LIMIT 10;
 
 -- extraccion de datos 
 select 
@@ -693,11 +695,10 @@ join
 left join 
     prestamo pr on c.id_copia = pr.id_copia and pr.activo_alquiler = true
 where
-    pr.id_prestamo is null  -- Asegúrate de que la copia no esté alquilada
+    pr.id_prestamo is null  
 group by
     p.titulo_pelicula
 order by 
     Titulo;
    
   
-   
