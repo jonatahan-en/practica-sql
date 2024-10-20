@@ -621,17 +621,83 @@ INSERT INTO tmp_videoclub (id_copia,fecha_alquiler_texto,dni,nombre,apellido_1,a
 	
 	
 select * from tmp_videoclub tv ;
-select * from director ;
-
-insert into director (nombre_director)
-select distinct tv.director 
-from tmp_videoclub tv 
-where tv.director is not null 
-order by tv.director;
 
 
 
+--añadimos UNIQUE a genero
+alter table genero
+add constraint unique_nombre_genero unique (nombre_genero);
+
+ -- incertamos los generos a nombre_genero  
+ insert into genero (nombre_genero)
+select distinct genero 
+from tmp_videoclub tv
+where genero is not null
+om conflict (nombre_genero) do nothing ;
+--Añadir UNIQUE a peliculas
+alter table peliculas
+add constraint unique_titulo_pelicula unique (titulo_pelicula);
+--Aumentar los varchar
+alter table peliculas sinopsis type varchar(1000);
+--Aumentar los varchar
+alter table peliculas titulo_pelicula type varchar(100);
+
+-- insertar  datos a peliculas
+insert into peliculas (titulo_pelicula, sinopsis, id_genero)
+select distinct 
+    tv.titulo, 
+    tv.sinopsis, 
+    g.id_genero
+from tmp_videoclub tv
+inner join genero g on lower(tv.genero) = lower(g.nombre_genero)
+on conflict (titulo_pelicula) do nothing ;
+
+-- insertar datos a copia
+insert into copia (estado_pelicula, id_pelicula)
+select distinct 'Disponible', pv.id_pelicula
+from tmp_videoclub tv
+inner join peliculas pv on tv.titulo = pv.titulo_pelicula
+where tv.id_copia is not null;
 
 
+ --pruebas  
+select * from genero g ;
+select * from peliculas p;
+select * from copia c ; 
+select * from prestamo p ; 
+select titulo_pelicula from peliculas;
+select titulo from tmp_videoclub;
+select id_copia from tmp_videoclub tv ;
+ 
 
 
+select 
+    id_pelicula, 
+    COUNT(*) AS cantidad_copias
+from copia group by id_pelicula order by id_pelicula;
+
+select distinct tv.titulo
+from tmp_videoclub tv
+left join peliculas p on tv.titulo = p.titulo_pelicula
+where p.titulo_pelicula is null;
+
+
+-- extraccion de datos 
+select 
+    p.titulo_pelicula as Titulo,
+    COUNT(c.id_copia) as Numero_Copias_Disponibles
+from 
+    peliculas p
+join 
+    copia c on p.id_pelicula = c.id_pelicula
+left join 
+    prestamo pr on c.id_copia = pr.id_copia and pr.activo_alquiler = true
+where
+    pr.id_prestamo is null  -- Asegúrate de que la copia no esté alquilada
+group by
+    p.titulo_pelicula
+order by 
+    Titulo;
+   
+  
+   
